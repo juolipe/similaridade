@@ -1,0 +1,4 @@
+A árvore AVL é uma árvore binária de busca balanceada. Em cada nó, a diferença entre a altura
+da subárvore esquerda e a altura da subárvore direita, chamada fator de balanceamento, deve ser
+no máximo um. Quando uma inserção desbalanceia a árvore, rotações simples ou duplas restauram
+o equilíbrio. Assim, a altura da árvore permanece logarítmica e a busca continua eficiente.

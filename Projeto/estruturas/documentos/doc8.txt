@@ -1,0 +1,4 @@
+Árvores binárias de busca organizam os dados de forma ordenada, permitindo busca, inserção e
+remoção eficientes. Porém, se as chaves chegarem em ordem, a árvore degenera em uma lista e a
+busca passa a ser linear. Árvores balanceadas, como a AVL e a rubro-negra, usam rotações para
+manter a altura pequena e garantir o desempenho da estrutura de dados.

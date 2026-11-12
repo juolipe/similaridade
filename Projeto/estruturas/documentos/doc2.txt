@@ -1,0 +1,4 @@
+Na ciência da computação, estruturas de dados são maneiras de organizar e armazenar informações
+na memória. Escolher a estrutura de dados adequada influencia o desempenho do algoritmo.
+Pilhas, filas, listas, árvores e tabelas hash são exemplos clássicos de estruturas de dados.
+Cada uma oferece vantagens e desvantagens no tempo de busca, inserção e remoção de elementos.

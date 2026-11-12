@@ -1,0 +1,4 @@
+Uma tabela hash associa chaves a valores usando uma função de dispersão. A função hash calcula
+a posição de cada chave no vetor interno. Quando duas chaves caem na mesma posição ocorre uma
+colisão, que pode ser tratada por encadeamento ou por endereçamento aberto com sondagem linear.
+Com uma boa função hash e fator de carga controlado, a busca leva tempo constante em média.
