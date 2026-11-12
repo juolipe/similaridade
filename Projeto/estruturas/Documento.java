@@ -1,9 +1,7 @@
-package estruturas;
-
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,90 +9,80 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+/**
+ * Arquivo de texto normalizado (minúsculas, sem pontuação, tokenizado,
+ * sem stop words), com as frequências numa HashTable própria.
+ */
 public class Documento {
 
-    private String nome;
-    private String caminho;
-    private HashTable tabelaPalavras;
-    private List<String> palavrasUnicas;
+    private final String nome;
+    private final String caminho;
+    private final HashTable tabelaPalavras;
+    private final List<String> palavrasUnicas; // para percorrer o vocabulário
+    private double norma = -1;                 // cache para o Cosseno
 
-    // Palavras que serão desconsideradas
     private static final Set<String> STOP_WORDS = new HashSet<>(
         Arrays.asList(
             "a", "o", "as", "os", "um", "uma", "uns", "umas",
             "de", "do", "da", "dos", "das",
             "em", "no", "na", "nos", "nas",
-            "para", "por", "com", "sem",
+            "para", "por", "com", "sem", "pelo", "pela", "pelos", "pelas",
             "e", "ou", "mas",
-            "é", "ser", "estar", "foi", "são",
+            "é", "ser", "estar", "foi", "são", "era", "há",
             "ao", "aos", "à", "às",
-            "que", "se", "como", "mais", "menos",
+            "que", "se", "como", "mais", "menos", "muito",
             "sua", "seu", "suas", "seus",
-            "meu", "minha", "este", "esta",
-            "esse", "essa", "isso", "isto",
+            "meu", "minha", "este", "esta", "estes", "estas",
+            "esse", "essa", "esses", "essas", "isso", "isto",
+            "aquele", "aquela", "aquilo",
             "ele", "ela", "eles", "elas",
-            "eu", "tu", "nós", "vós",
-            "não", "sim", "já", "também"
+            "eu", "tu", "nós", "vós", "lhe", "lhes",
+            "não", "sim", "já", "também", "quando", "onde", "entre"
         )
     );
 
-    // Construtor
-    public Documento(String caminho, int algoritmoHash)
-            throws IOException {
-
-        this.caminho = caminho;
-        this.nome = Path.of(caminho).getFileName().toString();
-
-        this.tabelaPalavras = new HashTable(algoritmoHash);
-        this.palavrasUnicas = new ArrayList<>();
-
-        carregarDocumento();
+    public Documento(String caminho, int algoritmoHash) throws IOException {
+        this(
+            Path.of(caminho).getFileName().toString(),
+            caminho,
+            Files.readString(Path.of(caminho), StandardCharsets.UTF_8),
+            algoritmoHash
+        );
     }
 
-    // Lê o arquivo
-    private void carregarDocumento() throws IOException {
-
-        String texto = Files.readString(
-            Path.of(caminho),
-            StandardCharsets.UTF_8
-        );
+    private Documento(String nome, String caminho, String texto, int algoritmoHash) {
+        this.nome = nome;
+        this.caminho = caminho;
+        this.tabelaPalavras = new HashTable(algoritmoHash);
+        this.palavrasUnicas = new ArrayList<>();
 
         processarTexto(texto);
     }
 
-    // Normaliza e processa o conteúdo
-    private void processarTexto(String texto) {
+    /** Documento a partir de texto em memória (experimentos). */
+    public static Documento deTexto(String nome, String texto, int algoritmoHash) {
+        return new Documento(nome, null, texto, algoritmoHash);
+    }
 
+    private void processarTexto(String texto) {
         texto = texto.toLowerCase(Locale.ROOT);
 
-        // Remove pontuação e caracteres especiais,
-        // preservando letras, números e espaços.
+        // Mantém só letras (com acento), dígitos e espaços
         texto = texto.replaceAll("[^\\p{L}\\p{N}\\s]", " ");
 
-        // Separa o texto em palavras
-        String[] palavras = texto.split("\\s+");
-
-        for (String palavra : palavras) {
-
-            if (palavra.isEmpty()) {
+        for (String palavra : texto.split("\\s+")) {
+            if (palavra.isEmpty() || STOP_WORDS.contains(palavra)) {
                 continue;
             }
 
-            if (STOP_WORDS.contains(palavra)) {
-                continue;
-            }
-
-            // Registra a palavra se for sua primeira ocorrência
-            if (tabelaPalavras.get(palavra) == -1) {
+            if (!tabelaPalavras.contains(palavra)) {
                 palavrasUnicas.add(palavra);
             }
 
-            // Insere ou incrementa a frequência
             tabelaPalavras.inserir(palavra);
         }
     }
 
-    // Getters
     public String getNome() {
         return nome;
     }
@@ -111,8 +99,10 @@ public class Documento {
         return new ArrayList<>(palavrasUnicas);
     }
 
+    /** 0 se a palavra não aparece. */
     public int getFrequencia(String palavra) {
-        return tabelaPalavras.get(palavra);
+        int f = tabelaPalavras.get(palavra);
+        return (f == -1) ? 0 : f;
     }
 
     public int getQuantidadePalavrasUnicas() {
@@ -120,7 +110,6 @@ public class Documento {
     }
 
     public int getQuantidadePalavras() {
-
         int total = 0;
 
         for (String palavra : palavrasUnicas) {
@@ -128,5 +117,21 @@ public class Documento {
         }
 
         return total;
+    }
+
+    /** sqrt(soma das frequências²). */
+    public double getNorma() {
+        if (norma < 0) {
+            double soma = 0;
+
+            for (String palavra : palavrasUnicas) {
+                int f = tabelaPalavras.get(palavra);
+                soma += (double) f * f;
+            }
+
+            norma = Math.sqrt(soma);
+        }
+
+        return norma;
     }
 }
